@@ -82,12 +82,11 @@ namespace Projeto.Models
         }
         public List<CarrinhoCompraItem> GetCarrinhoCompraItens()
         {
-            return(CarrinhoCompraItems??
-            (CarrinhoCompraItems =
-            _context.CarrinhoCompraItens
-            .Where(c=> c.CarrinhoCompraId== CarrinhoCompraId)
-            .Include(s=> s.Lanche)
-            .ToList()));
+            return CarrinhoCompraItems ??
+                   (CarrinhoCompraItems =
+                       _context.CarrinhoCompraItens.Where(c => c.CarrinhoCompraId == CarrinhoCompraId)
+                           .Include(s => s.Lanche)
+                           .ToList());
         }
 
         public void LimparCarrinho()

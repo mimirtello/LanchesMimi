@@ -27,5 +27,14 @@ namespace Projeto.Repositories
         {
             return _context.Lanches.FirstOrDefault(l => l.LancheId == lancheId);
         }
+
+        public IEnumerable<Lanche> GetLanchesPorCategoria(string categoria)
+        {
+            var resultado = _context.Lanches.Include(c => c.Categoria)
+                           .Where(l => l.Categoria.CategoriaNome.Equals(categoria))
+                           .OrderBy(c => c.Nome);
+ 
+            return resultado;
+        }
     }
 }
