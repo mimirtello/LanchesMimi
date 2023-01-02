@@ -9,6 +9,8 @@ using Pomelo.EntityFrameworkCore.MySql;
 using Projeto.Repositories.Interfaces;
 using Projeto.Repositories;
 using Projeto.Models;
+using Microsoft.AspNetCore.Identity;
+using Projeto.Services;
 
 namespace LanchesMac
 {
@@ -25,13 +27,30 @@ namespace LanchesMac
         public void ConfigureServices(IServiceCollection services)
         {
             string connection = Configuration.GetConnectionString("DefaultConnection");
-           services.AddDbContext<AppDbContext>(options =>
-        options.UseMySql(connection, ServerVersion.AutoDetect(connection)));
+            services.AddDbContext<AppDbContext>(options =>
+            options.UseMySql(connection, ServerVersion.AutoDetect(connection)));
+
+            services.AddIdentity<IdentityUser, IdentityRole>()
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
 
             services.AddTransient<ILancheRepository, LancheRepository>();
             services.AddTransient<ICategoriaRepository, CategoriaRepository>();
+            services.AddTransient<IPedidoRepository, PedidoRepository>();
+
+            services.AddScoped<ISeedUserRoleInitial, SeedUserRoleInitial>();
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Admin",
+                    politica =>
+                    {
+                        politica.RequireRole("Admin");
+                    });
+            });
+
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped(sp=> CarrinhoCompra.GetCarrinho(sp));
+            services.AddScoped(sp => CarrinhoCompra.GetCarrinho(sp));
             services.AddControllersWithViews();
 
             services.AddMemoryCache();
@@ -39,7 +58,7 @@ namespace LanchesMac
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ISeedUserRoleInitial seedUserRoleInitial)
         {
             if (env.IsDevelopment())
             {
@@ -56,8 +75,15 @@ namespace LanchesMac
 
             app.UseRouting();
 
+            //cria os perfis
+            seedUserRoleInitial.SeedRoles();
+            //cria os usuários e atribui ao perfil
+            seedUserRoleInitial.SeedUsers();
+
             //acrescentar
             app.UseSession();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
@@ -74,9 +100,13 @@ namespace LanchesMac
                 //     defaults: new{controler="admin"});
 
                 endpoints.MapControllerRoute(
+                    name: "areas",
+                    pattern: "{area:exists}/{controller=Admin}/{action=Index}/{id?}");
+
+                endpoints.MapControllerRoute(
                     name: "categoriaFiltro",
                     pattern: "Lanche/{action}/{categoria?}",
-                    defaults: new {controller="Lanche", action="List"});
+                    defaults: new { controller = "Lanche", action = "List" });
 
                 endpoints.MapControllerRoute(
                     name: "default",

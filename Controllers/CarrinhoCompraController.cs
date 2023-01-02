@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Projeto.Repositories.Interfaces;
 using Projeto.Models;
 using Projeto.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Projeto.Controllers
 {
@@ -34,6 +35,7 @@ namespace Projeto.Controllers
             };
             return View(carrinhoCompraVM);
         }
+        [Authorize]
         public IActionResult AdicionarItemNoCarrinhoCompra(int lancheId)
         {
             var lancheSelecionado = _lancheRepository.Lanches
@@ -45,7 +47,7 @@ namespace Projeto.Controllers
             }
             return RedirectToAction("Index");
         }
-
+        [Authorize]
         public IActionResult RemoverItemDoCarrinhoCompra(int lancheId)
         {
             var lancheSelecionado = _lancheRepository.Lanches
